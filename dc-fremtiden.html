@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DC-Fremtiden | Likestrøm i boliger</title>
+<style>
+  :root {
+    --bg-0: #050912;
+    --bg-1: rgba(10, 17, 36, 0.6);
+    --bg-2: rgba(17, 26, 53, 0.5);
+    --accent: #00e0ff;
+    --accent-2: #7a5cff;
+    --accent-3: #00ffae;
+    --accent-4: #ff5cb4;
+    --text: #e6f1ff;
+    --text-dim: #8fa3c4;
+    --border: rgba(0, 224, 255, 0.18);
+    --glow: 0 0 30px rgba(0, 224, 255, 0.4);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: #02040a;
+    color: var(--text);
+    overflow-x: hidden;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  /* ANIMATED MESH-LIKE BACKGROUND (nscale.com inspired) */
+  .bg-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 30%, #0a1430 0%, #02040a 70%);
+  }
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.55;
+    mix-blend-mode: screen;
+    will-change: transform;
+  }
+  .blob.b1 {
+    width: 55vw; height: 55vw;
+    background: radial-gradient(circle, #00e0ff 0%, transparent 70%);
+    top: -10vw; left: -10vw;
+    animation: floatA 22s ease-in-out infinite;
+  }
+  .blob.b2 {
+    width: 60vw; height: 60vw;
+    background: radial-gradient(circle, #7a5cff 0%, transparent 70%);
+    top: 10vh; right: -15vw;
+    animation: floatB 28s ease-in-out infinite;
+  }
+  .blob.b3 {
+    width: 50vw; height: 50vw;
+    background: radial-gradient(circle, #ff5cb4 0%, transparent 70%);
+    top: 45vh; left: 25vw;
+    animation: floatC 26s ease-in-out infinite;
+  }
+  .blob.b4 {
+    width: 65vw; height: 65vw;
+    background: radial-gradient(circle, #00ffae 0%, transparent 70%);
+    top: 60vh; right: 5vw;
+    animation: floatD 32s ease-in-out infinite;
+  }
+  .blob.b5 {
+    width: 45vw; height: 45vw;
+    background: radial-gradient(circle, #00e0ff 0%, transparent 70%);
+    bottom: -10vw; left: 30vw;
+    animation: floatA 36s ease-in-out infinite reverse;
+  }
+  .blob.b6 {
+    width: 50vw; height: 50vw;
+    background: radial-gradient(circle, #7a5cff 0%, transparent 70%);
+    top: 110vh; left: -10vw;
+    animation: floatB 30s ease-in-out infinite reverse;
+  }
+  .blob.b7 {
+    width: 55vw; height: 55vw;
+    background: radial-gradient(circle, #ff5cb4 0%, transparent 70%);
+    top: 180vh; right: -10vw;
+    animation: floatC 34s ease-in-out infinite;
+  }
+  .blob.b8 {
+    width: 60vw; height: 60vw;
+    background: radial-gradient(circle, #00ffae 0%, transparent 70%);
+    top: 250vh; left: 10vw;
+    animation: floatD 38s ease-in-out infinite reverse;
+  }
+
+  @keyframes floatA {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(15vw, 10vh) scale(1.15); }
+    50% { transform: translate(8vw, 18vh) scale(0.9); }
+    75% { transform: translate(-5vw, 8vh) scale(1.05); }
+  }
+  @keyframes floatB {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(-12vw, 15vh) scale(1.1); }
+    50% { transform: translate(-18vw, -5vh) scale(0.85); }
+    75% { transform: translate(-6vw, 12vh) scale(1.2); }
+  }
+  @keyframes floatC {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(10vw, -10vh) scale(0.9); }
+    50% { transform: translate(-8vw, 12vh) scale(1.2); }
+    75% { transform: translate(15vw, 6vh) scale(1.05); }
+  }
+  @keyframes floatD {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(-10vw, -8vh) scale(1.15); }
+    50% { transform: translate(8vw, -15vh) scale(0.9); }
+    75% { transform: translate(-15vw, -4vh) scale(1.1); }
+  }
+
+  /* Subtle grid overlay */
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0, 224, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 224, 255, 0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+  /* Vignette */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(2, 4, 10, 0.5) 100%);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 1rem 2rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(5, 9, 18, 0.55);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo {
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo::before {
+    content: '⚡ ';
+    -webkit-text-fill-color: var(--accent);
+  }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s;
+    position: relative;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 6rem 2rem 2rem;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero-content {
+    max-width: 1100px;
+    z-index: 3;
+    position: relative;
+  }
+  .badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    background: rgba(0, 224, 255, 0.05);
+    letter-spacing: 0.1em;
+    backdrop-filter: blur(10px);
+  }
+  .badge .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent-3);
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    box-shadow: 0 0 10px var(--accent-3);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  h1.hero-title {
+    font-size: clamp(2.5rem, 7vw, 6rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.03em;
+  }
+  h1.hero-title .gradient {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+  .hero-subtitle {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: var(--text-dim);
+    max-width: 700px;
+    margin: 0 auto 2.5rem;
+  }
+  .cta-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 0.9rem 1.8rem;
+    border-radius: 100px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #050912;
+    box-shadow: var(--glow);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 40px rgba(0, 224, 255, 0.6);
+  }
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+  .btn-ghost:hover {
+    background: rgba(0, 224, 255, 0.1);
+    border-color: var(--accent);
+  }
+
+  .scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    animation: bounce 2s infinite;
+    z-index: 3;
+  }
+  .scroll-indicator::after {
+    content: '↓';
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    color: var(--accent);
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* SECTIONS */
+  section {
+    padding: 6rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  .section-tag {
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .section-lead {
+    color: var(--text-dim);
+    max-width: 720px;
+    margin: 0 auto;
+    font-size: 1.05rem;
+  }
+
+  /* GLASS CARD BASE */
+  .glass {
+    background: rgba(10, 17, 36, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+  }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  .stat {
+    padding: 2rem;
+    background: rgba(10, 17, 36, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s, border-color 0.4s, box-shadow 0.4s;
+    cursor: default;
+  }
+  .stat:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 40px rgba(0, 224, 255, 0.2);
+  }
+  .stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .stat:hover::before { opacity: 1; }
+  .stat-value {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .stat-label {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+
+  /* Tooltip / expand on hover (no plus icon now) */
+  .has-tip { position: relative; }
+  .tip {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.3s ease, margin-top 0.3s ease, padding-top 0.3s ease;
+    border-top: 1px solid transparent;
+    margin-top: 0;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .has-tip:hover .tip,
+  .has-tip:focus-within .tip {
+    max-height: 300px;
+    opacity: 1;
+    border-top-color: var(--border);
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  /* FEATURE GRID */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  .feature {
+    padding: 2rem;
+    background: rgba(10, 17, 36, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    box-shadow: 0 20px 60px rgba(0, 224, 255, 0.15);
+  }
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 224, 255, 0.15), rgba(122, 92, 255, 0.15));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.2rem;
+    border: 1px solid var(--border);
+    font-size: 1.4rem;
+  }
+  .feature h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.6rem;
+    color: var(--text);
+  }
+  .feature p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+
+  /* VOLTAGE COMPARISON */
+  .voltage-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  .voltage-card {
+    padding: 2.5rem 2rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: rgba(10, 17, 36, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    text-align: center;
+    position: relative;
+    transition: all 0.4s;
+  }
+  .voltage-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 20px 60px rgba(0, 224, 255, 0.15);
+  }
+  .voltage-card.recommended {
+    background: linear-gradient(180deg, rgba(0, 224, 255, 0.18), rgba(122, 92, 255, 0.08));
+    border-color: var(--accent);
+    box-shadow: 0 0 40px rgba(0, 224, 255, 0.2);
+  }
+  .recommended-tag {
+    position: absolute;
+    top: -12px; left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #050912;
+    padding: 0.3rem 1rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .voltage-number {
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent-3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  .voltage-card.recommended .voltage-number {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .voltage-unit {
+    font-size: 1.2rem;
+    color: var(--text-dim);
+    margin-left: 0.3rem;
+  }
+  .voltage-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1rem 0 0.5rem;
+  }
+  .voltage-desc {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  .voltage-specs {
+    display: flex;
+    justify-content: space-around;
+    border-top: 1px solid var(--border);
+    padding-top: 1.2rem;
+  }
+  .spec { text-align: center; }
+  .spec-value {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.1rem;
+  }
+  .spec-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.2rem;
+  }
+
+  /* ENERGY FLOW DIAGRAM */
+  .energy-flow {
+    background: rgba(10, 17, 36, 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    margin-top: 2rem;
+  }
+  .flow-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  .flow-col h4 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+  }
+  .flow-col.dc h4 { color: var(--accent); }
+  .flow-step {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    padding: 0.9rem 1.2rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    transition: all 0.3s;
+  }
+  .flow-step.eliminated {
+    opacity: 0.3;
+    text-decoration: line-through;
+  }
+  .flow-step.highlight {
+    border-color: var(--accent);
+    background: rgba(0, 224, 255, 0.12);
+  }
+  .flow-arrow {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    margin: 0.2rem 0;
+  }
+  .flow-result {
+    margin-top: 1.5rem;
+    text-align: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+  .flow-result strong { color: var(--accent); font-size: 1.1rem; }
+
+  /* COST COMPARISON */
+  .cost-section { margin-top: 2rem; }
+  .cost-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .cost-card {
+    background: rgba(10, 17, 36, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s;
+  }
+  .cost-card:hover { transform: translateY(-4px); }
+  .cost-card.ac { border-color: rgba(143, 163, 196, 0.4); }
+  .cost-card.dc {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, rgba(0, 224, 255, 0.1), rgba(122, 92, 255, 0.05));
+    box-shadow: 0 0 40px rgba(0, 224, 255, 0.15);
+  }
+  .cost-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .cost-card.ac .cost-title { color: var(--text-dim); }
+  .cost-card.dc .cost-title {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .cost-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 1.2rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cost-row:last-of-type { border-bottom: none; }
+  .cost-label {
+    color: var(--text-dim);
+    font-size: 1rem;
+  }
+  .cost-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .cost-sum {
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .cost-sum .cost-label { font-weight: 700; color: var(--text); font-size: 1rem; }
+  .cost-sum .cost-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+  }
+  .cost-card.dc .cost-sum .cost-value {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .cost-summary {
+    background: rgba(10, 17, 36, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    text-align: center;
+  }
+  .cost-summary .item {
+    padding: 0 1rem;
+    border-right: 1px solid var(--border);
+  }
+  .cost-summary .item:last-child { border-right: none; }
+  .cost-summary .item-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .cost-summary .item-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .cost-note {
+    margin-top: 1.5rem;
+    padding: 1.2rem 1.5rem;
+    background: rgba(255, 170, 0, 0.06);
+    border: 1px solid rgba(255, 170, 0, 0.2);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    backdrop-filter: blur(10px);
+  }
+  .cost-note strong { color: #ffc966; }
+
+  /* SAFETY */
+  .safety-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  .safety-item {
+    background: rgba(10, 17, 36, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    border-left: 3px solid var(--accent);
+    transition: transform 0.4s, box-shadow 0.4s;
+  }
+  .safety-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+  }
+  .safety-item.warning { border-left-color: #ffaa00; }
+  .safety-item.success { border-left-color: var(--accent-3); }
+  .safety-item h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+  }
+  .safety-item p { color: var(--text-dim); font-size: 0.95rem; }
+
+  /* CONCLUSION */
+  .conclusion {
+    background: linear-gradient(180deg, rgba(0, 224, 255, 0.1), rgba(122, 92, 255, 0.06));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 4rem 3rem;
+    text-align: center;
+    margin-top: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .conclusion::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2), var(--accent-3));
+    border-radius: 24px;
+    z-index: -1;
+    opacity: 0.4;
+    filter: blur(20px);
+  }
+  .conclusion h2 { margin-bottom: 1.5rem; }
+  .conclusion p {
+    max-width: 800px;
+    margin: 0 auto 1rem;
+    color: var(--text-dim);
+    font-size: 1.05rem;
+  }
+  .conclusion strong { color: var(--text); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    background: rgba(2, 4, 10, 0.5);
+    backdrop-filter: blur(20px);
+  }
+  footer p { margin-bottom: 0.4rem; }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .voltage-grid { grid-template-columns: 1fr; }
+    .flow-compare { grid-template-columns: 1fr; gap: 2rem; }
+    .cost-grid { grid-template-columns: 1fr; }
+    section { padding: 4rem 1.5rem; }
+    .conclusion { padding: 3rem 1.5rem; }
+    .cost-summary .item { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+    .cost-summary .item:last-child { border-bottom: none; }
+  }
+
+  /* SCROLL REVEAL — bidirectional (in/out) */
+  .reveal {
+    opacity: 0;
+    transform: translateY(60px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-left {
+    opacity: 0;
+    transform: translateX(-80px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .reveal-right {
+    opacity: 0;
+    transform: translateX(80px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .reveal-scale {
+    opacity: 0;
+    transform: scale(0.92);
+    transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal-scale.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .stagger > * {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .stagger.visible > * {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .stagger.visible > *:nth-child(1) { transition-delay: 0.05s; }
+  .stagger.visible > *:nth-child(2) { transition-delay: 0.15s; }
+  .stagger.visible > *:nth-child(3) { transition-delay: 0.25s; }
+  .stagger.visible > *:nth-child(4) { transition-delay: 0.35s; }
+  .stagger.visible > *:nth-child(5) { transition-delay: 0.45s; }
+  .stagger.visible > *:nth-child(6) { transition-delay: 0.55s; }
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="blob b4"></div>
+  <div class="blob b5"></div>
+  <div class="blob b6"></div>
+  <div class="blob b7"></div>
+  <div class="blob b8"></div>
+</div>
+<div class="grid-overlay"></div>
+<div class="vignette"></div>
+
+<nav>
+  <div class="logo">DC-FREMTIDEN</div>
+  <ul class="nav-links">
+    <li><a href="#oversikt">Oversikt</a></li>
+    <li><a href="#fordeler">Fordeler</a></li>
+    <li><a href="#spenning">Spenning</a></li>
+    <li><a href="#kostnad">Kostnad</a></li>
+    <li><a href="#sikkerhet">Sikkerhet</a></li>
+    <li><a href="#konklusjon">Konklusjon</a></li>
+  </ul>
+</nav>
+
+<header class="hero">
+  <div class="hero-content">
+    <div class="badge"><span class="dot"></span>HOVEDPROSJEKT · NORDLAND TEKNISKE FAGSKOLE</div>
+    <h1 class="hero-title">
+      Fremtidens bolig<br>går på <span class="gradient">likestrøm</span>
+    </h1>
+    <p class="hero-subtitle">
+      En teknisk og økonomisk analyse av hvordan DC-anlegg kan erstatte tradisjonell
+      vekselstrøm i moderne boliger – og åpne for solceller, batterilagring og elbillading
+      med færre tap.
+    </p>
+    <div class="cta-row">
+      <a href="#oversikt" class="btn btn-primary">Utforsk prosjektet →</a>
+      <a href="#konklusjon" class="btn btn-ghost">Les konklusjonen</a>
+    </div>
+  </div>
+  <div class="scroll-indicator">Rull ned</div>
+</header>
+
+<section id="oversikt">
+  <div class="section-header reveal">
+    <div class="section-tag">Problemstilling</div>
+    <h2>Hvordan kan DC være et alternativ til AC i boliger?</h2>
+    <p class="section-lead">
+      Moderne hjem er fulle av elektronikk som internt går på likestrøm – LED-lys,
+      laderne dine, solceller, batterier og elbiler. Vi undersøkte hva som skjer hvis
+      vi kutter ut omformingsleddene. Hold musen over kortene for mer informasjon.
+    </p>
+  </div>
+
+  <div class="stats-grid stagger reveal">
+    <div class="stat has-tip">
+      <div class="stat-value">5–15%</div>
+      <div class="stat-label">Energieffektivisering ved direkte DC-distribusjon</div>
+      <div class="tip">
+        Tap fra AC/DC-omforminger reduseres når energien kan flyte direkte
+        fra produksjon til lagring til last. Effekten er størst i boliger med
+        høy andel solceller og batterilagring.
+      </div>
+    </div>
+    <div class="stat has-tip">
+      <div class="stat-value">380V</div>
+      <div class="stat-label">Anbefalt spenningsnivå for fremtidige DC-boliger</div>
+      <div class="tip">
+        Allerede etablert som industriell standard i datasentre via EMerge Alliance
+        og ANSI/BICSI. IEC arbeider parallelt med en formell internasjonal standard
+        på dette nivået.
+      </div>
+    </div>
+    <div class="stat has-tip">
+      <div class="stat-value">98,4%</div>
+      <div class="stat-label">Virkningsgrad ved DC fra panel til forbruker</div>
+      <div class="tip">
+        Verdien er hentet fra Growatt og forutsetter at likestrømmen beholdes
+        helt fra solcellepanel til apparat – uten å gå via et tradisjonelt
+        AC-mellomledd.
+      </div>
+    </div>
+    <div class="stat has-tip">
+      <div class="stat-value">14000 kWh</div>
+      <div class="stat-label">Mulig årlig besparelse for et boligfelt på 20 hus</div>
+      <div class="tip">
+        Forutsetter at 30–50% av forbruket går til DC-interne laster og at
+        virkningsgraden løftes fra 90% til 96%. Beregnet for et boligfelt med
+        totalt 400 000 kWh i årsforbruk.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="fordeler">
+  <div class="section-header reveal">
+    <div class="section-tag">Hvorfor likestrøm</div>
+    <h2>Bygd for hvordan vi faktisk bruker strøm</h2>
+    <p class="section-lead">
+      Solceller produserer DC. Batterier lagrer DC. Elbiler lader på DC.
+      Elektronikken i hjemmet konverterer AC til DC internt. Tiden er moden for å
+      tenke nytt.
+    </p>
+  </div>
+
+  <div class="features stagger reveal">
+    <div class="feature has-tip">
+      <div class="feature-icon">☀️</div>
+      <h3>Direkte fra solen</h3>
+      <p>Solcelleanlegg produserer likestrøm naturlig. I et DC-hjem unngår du
+      dobbeltkonvertering – energien går rett fra taket til lasten.</p>
+      <div class="tip">
+        Et typisk norsk solcelleanlegg gir 700–900 kWh per installert kWp i
+        årlig produksjon. Når dobbeltomformingen via inverter forsvinner,
+        utnyttes hver kWh bedre – særlig om dagen.
+      </div>
+    </div>
+    <div class="feature has-tip">
+      <div class="feature-icon">🔋</div>
+      <h3>Smartere batterilagring</h3>
+      <p>Batterier opererer på DC. Lokal lagring jevner ut effekttopper, gir
+      prisstyring, og åpner for øy-drift når nettet faller.</p>
+      <div class="tip">
+        LFP (litium-jernfosfat) er dagens standard for boligbatteri.
+        Natrium-ion og faststoffbatterier står på trappene – med billigere
+        råvarer og høyere energitetthet kan disse senke terskelen vesentlig.
+      </div>
+    </div>
+    <div class="feature has-tip">
+      <div class="feature-icon">⚡</div>
+      <h3>Raskere elbillading</h3>
+      <p>Mode 4 DC-lading kutter bilens ombordlader ut av ligningen –
+      mindre tap, raskere lading, og toveis V2G-mulighet.</p>
+      <div class="tip">
+        Bilens ombordlader har 80–95% virkningsgrad. Ved Mode 4 hjemmelading
+        (à la CCS/CHAdeMO) går strømmen direkte til batteriet. Med V2G kan
+        bilen i tillegg mate strøm tilbake i toppbelastningstimer.
+      </div>
+    </div>
+    <div class="feature has-tip">
+      <div class="feature-icon">📉</div>
+      <h3>Mindre nettap</h3>
+      <p>Færre AC/DC-omforminger betyr mindre varmeutvikling i komponenter,
+      lavere total belastning og høyere systemvirkningsgrad.</p>
+      <div class="tip">
+        Hver omforming koster typisk 2–5% i virkningsgrad. I et moderne hjem
+        med LED, elektronikk og frekvensomformere blir det fort flere ledd –
+        som hver eneste kWh må passere.
+      </div>
+    </div>
+    <div class="feature has-tip">
+      <div class="feature-icon">🏠</div>
+      <h3>Slankere infrastruktur</h3>
+      <p>Med batteribuffer kan eksisterende kabling utnyttes bedre. Reduserte
+      effekttopper utsetter behovet for nettforsterkning.</p>
+      <div class="tip">
+        I distribusjonsnettet er det effekttoppene – ikke årsforbruket – som
+        avgjør hvor kraftig kabling og transformatorer må være. Lokal lagring
+        kan derfor utsette dyre nettinvesteringer i mange år.
+      </div>
+    </div>
+    <div class="feature has-tip">
+      <div class="feature-icon">🌍</div>
+      <h3>Lavere klimaavtrykk</h3>
+      <p>Færre komponenter, mindre kobber, lengre levetid. Direkte DC reduserer
+      råvareforbruket gjennom hele anleggets livsløp.</p>
+      <div class="tip">
+        Høyere systemspenning gir lavere strøm ved samme effekt. Det betyr
+        tynnere kabler, mindre kobberforbruk og redusert vekt – verdifullt
+        både økonomisk og miljømessig.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-header reveal">
+    <div class="section-tag">Energiflyt</div>
+    <h2>Færre omforminger, mer energi</h2>
+    <p class="section-lead">
+      Hver konvertering mellom AC og DC koster prosenter i virkningsgrad.
+      I et DC-hjem kuttes flere ledd helt ut.
+    </p>
+  </div>
+
+  <div class="energy-flow reveal-scale">
+    <div class="flow-compare">
+      <div class="flow-col reveal-left">
+        <h4>Tradisjonelt AC-anlegg</h4>
+        <div class="flow-step">☀️ Solcelle produserer DC</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">🔄 Inverter: DC → AC</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">🏠 AC-distribusjon i bolig</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">🔄 Apparatets likeretter: AC → DC</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">💡 Lasten bruker DC internt</div>
+        <div class="flow-result">Total virkningsgrad ~<strong>85–90%</strong></div>
+      </div>
+      <div class="flow-col dc reveal-right">
+        <h4>DC-anlegg</h4>
+        <div class="flow-step highlight">☀️ Solcelle produserer DC</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step eliminated">🔄 Inverter (kuttet ut)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step highlight">🏠 DC-distribusjon i bolig</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step eliminated">🔄 Apparatets likeretter (kuttet ut)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step highlight">💡 Lasten bruker DC direkte</div>
+        <div class="flow-result">Total virkningsgrad opp mot <strong>96%+</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="spenning">
+  <div class="section-header reveal">
+    <div class="section-tag">Spenningsnivå</div>
+    <h2>Hvilken spenning bør et DC-hjem ha?</h2>
+    <p class="section-lead">
+      Tre kandidater dominerer diskusjonen. Valget styrer alt fra kabeltverrsnitt
+      til hva slags komponenter du kan kjøpe i butikken. Hold musen over kortene
+      for å se mer.
+    </p>
+  </div>
+
+  <div class="voltage-grid stagger reveal">
+    <div class="voltage-card has-tip">
+      <div class="voltage-number">48<span class="voltage-unit">V</span></div>
+      <div class="voltage-name">Lavspenning</div>
+      <div class="voltage-desc">Brukt i hytter, båter og fritidsanlegg</div>
+      <div class="voltage-specs">
+        <div class="spec">
+          <div class="spec-value">40A</div>
+          <div class="spec-label">ved 2000W</div>
+        </div>
+        <div class="spec">
+          <div class="spec-value">10 mm²</div>
+          <div class="spec-label">kabeltverrsnitt</div>
+        </div>
+      </div>
+      <div class="tip">
+        Veldig sikker for personer og dyr siden berøringsspenningen aldri overstiger
+        50V. Ulempen er at høye strømmer krever uforholdsmessig tykke kabler – og
+        gir stort spenningsfall i lange kurser.
+      </div>
+    </div>
+
+    <div class="voltage-card has-tip">
+      <div class="voltage-number">325<span class="voltage-unit">V</span></div>
+      <div class="voltage-name">Tilpasset 230V AC</div>
+      <div class="voltage-desc">Tilsvarer toppverdien av dagens nettspenning</div>
+      <div class="voltage-specs">
+        <div class="spec">
+          <div class="spec-value">6,1A</div>
+          <div class="spec-label">ved 2000W</div>
+        </div>
+        <div class="spec">
+          <div class="spec-value">1,5 mm²</div>
+          <div class="spec-label">kabeltverrsnitt</div>
+        </div>
+      </div>
+      <div class="tip">
+        Moderne elektronikk lagrer allerede ~325V DC internt i en mellomkrets
+        etter likerettingen fra 230V AC. Direkte 325V-distribusjon kan dermed
+        kutte likerettertrinnet i mange eksisterende apparater.
+      </div>
+    </div>
+
+    <div class="voltage-card recommended has-tip">
+      <div class="recommended-tag">ANBEFALT</div>
+      <div class="voltage-number">380<span class="voltage-unit">V</span></div>
+      <div class="voltage-name">Etablert industristandard</div>
+      <div class="voltage-desc">Innarbeidet i datasentre og industri – modent komponentmarked</div>
+      <div class="voltage-specs">
+        <div class="spec">
+          <div class="spec-value">5,3A</div>
+          <div class="spec-label">ved 2000W</div>
+        </div>
+        <div class="spec">
+          <div class="spec-value">1,5 mm²</div>
+          <div class="spec-label">kabeltverrsnitt</div>
+        </div>
+      </div>
+      <div class="tip">
+        Lavere strøm gir lavere ledningstap, mindre varmeutvikling og redusert
+        spenningsfall over lengre kabelstrekk. Et bredt utvalg masseproduserte
+        vern, brytere og omformere er allerede tilgjengelig på dette nivået.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="kostnad">
+  <div class="section-header reveal">
+    <div class="section-tag">Økonomi</div>
+    <h2>Hva koster det å bygge et DC-hjem?</h2>
+    <p class="section-lead">
+      Beregningene er basert på en reell eneboliginstallasjon, med Schneider
+      Acti9 DC-serien for alle vern. Materiellprisene viser tydelig at
+      DC-komponenter fortsatt er vesentlig dyrere i et umodent marked.
+    </p>
+  </div>
+
+  <div class="cost-section reveal">
+    <div class="cost-grid">
+      <div class="cost-card ac reveal-left">
+        <div class="cost-title">AC-anlegg</div>
+        <div class="cost-row">
+          <span class="cost-label">Materiell</span>
+          <span class="cost-value">234 000 kr</span>
+        </div>
+        <div class="cost-row">
+          <span class="cost-label">Timer (135 t × 1 000 kr)</span>
+          <span class="cost-value">135 000 kr</span>
+        </div>
+        <div class="cost-sum">
+          <span class="cost-label">Sum</span>
+          <span class="cost-value">369 000 kr</span>
+        </div>
+      </div>
+
+      <div class="cost-card dc reveal-right">
+        <div class="cost-title">DC-anlegg</div>
+        <div class="cost-row">
+          <span class="cost-label">Materiell</span>
+          <span class="cost-value">590 000 kr</span>
+        </div>
+        <div class="cost-row">
+          <span class="cost-label">Timer (135 t × 1 000 kr)</span>
+          <span class="cost-value">135 000 kr</span>
+        </div>
+        <div class="cost-sum">
+          <span class="cost-label">Sum</span>
+          <span class="cost-value">725 000 kr</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cost-summary reveal-scale">
+      <div class="item">
+        <div class="item-value">+356 000 kr</div>
+        <div class="item-label">Merkostnad totalt for DC</div>
+      </div>
+      <div class="item">
+        <div class="item-value">~2,5×</div>
+        <div class="item-label">Høyere materiellkostnad</div>
+      </div>
+      <div class="item">
+        <div class="item-value">135 t</div>
+        <div class="item-label">Likt timeforbruk på montasje</div>
+      </div>
+    </div>
+
+    <div class="cost-note">
+      <strong>Slik er beregningen utført:</strong> Tallene bygger på en reell
+      eneboliginstallasjon der materiell som ikke endrer pris vesentlig fra AC til
+      DC er beholdt likt. Alle vern er beregnet med Schneider Acti9 DC-serien.
+      Smarthus-utstyr, komfyrvakt, stikkontakter med forrigling og lysarmaturer er
+      priset ut fra komponenter, utvikling og sertifisering. Kostprisene inkluderer
+      påslag og mva. Montasjetiden antas lik for begge anlegg, satt til 135 timer
+      à 1 000 kr.
+    </div>
+  </div>
+</section>
+
+<section id="sikkerhet">
+  <div class="section-header reveal">
+    <div class="section-tag">Sikkerhet</div>
+    <h2>Annerledes – men ikke farligere</h2>
+    <p class="section-lead">
+      DC oppfører seg fundamentalt annerledes enn AC i feilsituasjoner. Med riktig
+      prosjektering kan elsikkerheten fullt ut måle seg med et konvensjonelt anlegg.
+    </p>
+  </div>
+
+  <div class="safety-grid stagger reveal">
+    <div class="safety-item warning has-tip">
+      <h4>⚠️ Ingen nullgjennomgang</h4>
+      <p>Lysbuer i DC slukkes ikke naturlig som i AC. Brytere må ha forsterkede
+      slukkekamre og magnetisk utblåsing for å bryte lasten trygt.</p>
+      <div class="tip">
+        En lysbue dannes når luften ioniseres og temperaturen stiger til
+        15 000–20 000 °C. I AC slukkes lysbuen 100 ganger i sekundet ved
+        hver nullgjennomgang. I DC må den brytes mekanisk eller magnetisk.
+      </div>
+    </div>
+    <div class="safety-item warning has-tip">
+      <h4>⚠️ Spesialiserte vern</h4>
+      <p>Vanlige Type A jordfeilbrytere kan «blendes» av glatt DC-strøm.
+      Type B-vern eller Hall-sensorer kreves for tilstrekkelig personsikkerhet.</p>
+      <div class="tip">
+        Type A-vern bygger på en summasjonstransformator som metter ved
+        konstant magnetisering. Hall-effekt-sensorer måler magnetfeltet direkte
+        og er ikke utsatt for metningsproblematikk i DC-miljø.
+      </div>
+    </div>
+    <div class="safety-item success has-tip">
+      <h4>✓ Høyere terskel for hjertefibrillering</h4>
+      <p>IEC 60479-1 viser at terskelen for ventrikkelflimmer ligger på ~130 mA
+      for DC, mot ~30 mA for AC ved varig eksponering.</p>
+      <div class="tip">
+        Likestrøm gir kraftige, vedvarende muskelsammentrekninger snarere enn
+        rytmiske rykk. Skadebildet er annerledes – elektrokjemiske vevsskader
+        og termiske brannskader spiller en større rolle.
+      </div>
+    </div>
+    <div class="safety-item success has-tip">
+      <h4>✓ Færre varmegenererende komponenter</h4>
+      <p>Sentral DC-forsyning erstatter dusinvis av små strømforsyninger som
+      sitter spredt rundt i boligen. Færre svake punkter, mindre varmgang og
+      lavere brannrisiko fra forbrukerelektronikk.</p>
+      <div class="tip">
+        Hver liten AC/DC-strømforsyning er et eget mini-anlegg som kan svikte
+        over tid. Når sentral DC-distribusjon overtar, samles disse i én
+        kvalitetssikret konverter som er enklere å overvåke og vedlikeholde.
+      </div>
+    </div>
+    <div class="safety-item has-tip">
+      <h4>🔌 Egne DC-stikkontakter</h4>
+      <p>Forrigling som hindrer uttrekk under last gjør at lysbuer ikke kan
+      oppstå ved frakobling. AC-utstyr kan ikke kobles til ved feil.</p>
+      <div class="tip">
+        Trekker du et vanlig støpsel ut under last i et DC-anlegg, kan
+        kontaktene sveises sammen av en vedvarende lysbue. DC-stikkontakter
+        er konstruert med elektronisk forrigling som først bryter strømmen.
+      </div>
+    </div>
+    <div class="safety-item has-tip">
+      <h4>⚙️ TN-C-S anbefales</h4>
+      <p>Gir forutsigbar jordfeilstrøm og rask utkobling. Balanserer kostnader,
+      standardisering og personsikkerhet bedre enn IT-systemet.</p>
+      <div class="tip">
+        IT-system gir høyere driftssikkerhet ved første jordfeil, men krever
+        kontinuerlig isolasjonsovervåking som er dyr. I bolig veier rask og
+        intuitiv feilhåndtering tyngre enn driftspålitelighet.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-header reveal">
+    <div class="section-tag">Synergier</div>
+    <h2>Boligen som energisentral</h2>
+    <p class="section-lead">
+      DC-anlegg utnytter solceller, batterier og elbiler som ett integrert system.
+      Resultatet: lavere effekttopper, mindre nettavhengighet, og en bolig som kan
+      stå på egne ben.
+    </p>
+  </div>
+
+  <div class="features stagger reveal">
+    <div class="feature has-tip">
+      <div class="feature-icon">🚗</div>
+      <h3>Elbil som batteribank</h3>
+      <p>Med V2G/V2H kan en moderne elbil med 50–100 kWh fungere som boligens
+      lagringsbatteri. Et boligfelt med 50 biler får flere MWh tilgjengelig lagring.</p>
+      <div class="tip">
+        Det svenske selskapet Ferroamp er en av aktørene som leder an i
+        Norden med å koble elbiler direkte på DC-anlegg forsynt fra solceller.
+        Ladingen skjer via Mode 4 CCS/CHAdeMO uten å gå via ombordladeren.
+      </div>
+    </div>
+    <div class="feature has-tip">
+      <div class="feature-icon">📊</div>
+      <h3>Peak shaving</h3>
+      <p>Batteri og styringssystemer flater ut ettermiddagsforbruket. Nettleien
+      blir lavere, og distribusjonsnettet trenger ikke forsterkes så raskt.</p>
+      <div class="tip">
+        Ettermiddagstoppen oppstår når komfyr, varmtvann og vaskemaskin er i
+        bruk samtidig på tvers av boligene. Et batteri som dekker bare 30
+        minutter av denne toppen kan halvere effektleddet på nettleien.
+      </div>
+    </div>
+    <div class="feature has-tip">
+      <div class="feature-icon">🏝️</div>
+      <h3>Øy-drift ved nettfeil</h3>
+      <p>DC-mikronett med solceller og batterier kan kjøre videre når
+      overliggende nett faller ut – uten å måtte generere AC-nettfrekvens.</p>
+      <div class="tip">
+        LUT-Suur-Savon Sähkö-prosjektet i Finland demonstrerte at en DC-buss
+        med batterilagring kunne ta over forsyningen automatisk ved bortfall
+        av høyspentnettet. Beboerne merket lite til omleggingen.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="konklusjon">
+  <div class="conclusion reveal-scale">
+    <h2>DC er klar. Markedet henger etter.</h2>
+    <p>
+      Likestrøm i boliger er <strong>teknisk gjennomførbart</strong>, og 380V kombinert
+      med TN-C-S fremstår som den naturlige løsningen for fremtidens hjem. Energi-
+      effektivisering på 5–15% er reell, særlig i samspill med lokal produksjon
+      og lagring.
+    </p>
+    <p>
+      Per i dag er DC-komponenter dyrere på grunn av et umodent marked, og
+      regelverket beskriver DC-installasjoner mindre presist enn AC. Bredere
+      utbredelse krever <strong>tydeligere standarder, et modnere marked og
+      målrettede støtteordninger</strong>.
+    </p>
+    <p>
+      Men når strømprisene stiger, effektleddene øker og elektrifiseringen presser
+      distribusjonsnettet for hardt, blir DC mer enn et teknisk eksperiment –
+      det blir et nødvendig grep for et mer fleksibelt, effektivt og bærekraftig
+      energisystem.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p><strong>Hovedprosjekt – Nordland Tekniske Fagskole</strong></p>
+  <p>En undersøkelse av likestrøm som alternativ til vekselstrøm i moderne boliger</p>
+  <p style="margin-top: 1.5rem; opacity: 0.6;">⚡ Bygd for fremtidens energisystem</p>
+</footer>
+
+<script>
+  // BIDIRECTIONAL SCROLL REVEAL — slide in/out on scroll up and down
+  const revealSelectors = ['.reveal', '.reveal-left', '.reveal-right', '.reveal-scale', '.stagger'];
+  const elements = document.querySelectorAll(revealSelectors.join(','));
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      } else {
+        entry.target.classList.remove('visible');
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+  elements.forEach(el => observer.observe(el));
+
+  // Smooth scroll for nav
+  document.querySelectorAll('.nav-links a, .cta-row a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
